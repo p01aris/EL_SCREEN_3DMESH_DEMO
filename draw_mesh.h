@@ -3,6 +3,8 @@
 #include <string.h>
 #include <math.h>
 #include "el.h"
+#include "simple_gfx.h"
+#include "pico/time.h"
 
 // ========== 屏幕参数 ==========
 #define SCREEN_WIDTH  640
@@ -10,7 +12,7 @@
 #define CENTER_X      (SCREEN_WIDTH / 2)
 #define CENTER_Y      (SCREEN_HEIGHT / 2)
 // ========== 网格参数 ==========
-#define GRID_SIZE 32      // 每边点数（不要太大会卡）
+#define GRID_SIZE 64      // 每边点数（减小以避免内存问题）
 #define RANGE     10.0f   // x, y 范围 [-2, 2]
 #define SCALE     160/RANGE     // 投影缩放因子（像素/单位）
 const uint16_t window_x = 8;
@@ -62,16 +64,23 @@ static void clear_screen(unsigned char *buf) {
 }
 
 
-Vertex3D paraboloid_vertices[GRID_SIZE * GRID_SIZE];
-Vertex3D base_vertices[GRID_SIZE * GRID_SIZE];
-int edge_count;
-int edges[2 * GRID_SIZE * (GRID_SIZE - 1) * 2][2]; // 行线+列线
+static Vertex3D paraboloid_vertices[GRID_SIZE * GRID_SIZE];
+static Vertex3D base_vertices[GRID_SIZE * GRID_SIZE];
+static int edge_count;
+static int edges[2 * GRID_SIZE * (GRID_SIZE - 1) * 2][2]; // 行线+列线
+
+// 全局缓存数组，避免栈溢出
+static Vertex3D rotated_paraboloid[GRID_SIZE * GRID_SIZE];
+static Vertex3D rotated_base[GRID_SIZE * GRID_SIZE];
 
 // ========== 角度（弧度） ==========
 float angle_x = 0.15f;
 float angle_y = 0.15f;
 float angle_z = 0.15f;
 float speed = 0.03f;
+
+// 函数声明
+void draw_ui_elements(unsigned char *buffer);
 
 float calculate_zx(float u, float v) {
     float r = sqrt(u * u + v * v);  // 计算半径 r = √(u²+v²)
@@ -158,9 +167,6 @@ void draw_frame() {
     // 获取当前的写缓冲区
     unsigned char *buffer = el_get_draw_buffer();
     clear_screen(buffer);
-    // 旋转后顶点缓存
-    Vertex3D rotated_paraboloid[GRID_SIZE * GRID_SIZE];
-    Vertex3D rotated_base[GRID_SIZE * GRID_SIZE];
 
     // 旋转抛物面顶点
     for (int i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
@@ -213,7 +219,11 @@ void draw_frame() {
         // 绘制线条
         draw_line(buffer, x1, y1, x2, y2);
     }
-        // 更新旋转角度
+    
+    // 绘制文字和UI元素
+    draw_ui_elements(buffer);
+    
+    // 更新旋转角度
     angle_x += speed;
     if (angle_x > 2 * M_PI) angle_x -= 2 * M_PI;
     
@@ -222,6 +232,73 @@ void draw_frame() {
     
     angle_z += speed * 0.7f;
     if (angle_z > 2 * M_PI) angle_z -= 2 * M_PI;
+}
+
+// 绘制UI元素
+void draw_ui_elements(unsigned char *buffer) {
+    // 绘制标题 "3D DEMO" 在屏幕顶部中央
+    const char* title = "3D DEMO";
+    int title_width = strlen(title) * 6 * 3; // 每字符6像素宽度 * 3倍放大
+    int title_x = (SCREEN_WIDTH - title_width) / 2;
+    int title_y = 10;
+    gfx_draw_string(buffer, title_x, title_y, title, 3);
+    
+    // 绘制边框
+    gfx_draw_rect(buffer, title_x - 10, title_y - 5, title_width + 20, 25, false);
+    
+    // 绘制一些装饰元素
+    // 左上角圆圈
+    gfx_draw_circle(buffer, 20, 20, 8, false);
+    gfx_draw_circle(buffer, 20, 20, 4, true);
+    
+    // 右上角圆圈
+    gfx_draw_circle(buffer, SCREEN_WIDTH - 20, 20, 8, false);
+    gfx_draw_circle(buffer, SCREEN_WIDTH - 20, 20, 4, true);
+    
+    // 绘制一些信息文字在屏幕底部
+    char info_text[64];
+    
+    // FPS计算
+    static uint32_t frame_counter = 0;
+    static absolute_time_t last_fps_time;
+    static float current_fps = 0.0f;
+    static bool first_run = true;
+    
+    frame_counter++;
+    
+    if (first_run) {
+        last_fps_time = get_absolute_time();
+        first_run = false;
+    }
+    
+    absolute_time_t current_time = get_absolute_time();
+    int64_t time_diff = absolute_time_diff_us(last_fps_time, current_time);
+    
+    // 每500毫秒更新一次FPS，让显示更流畅
+    if (time_diff >= 500000) { // 500毫秒 = 500,000微秒
+        current_fps = (float)frame_counter * 1000000.0f / (float)time_diff;
+        frame_counter = 0;
+        last_fps_time = current_time;
+    }
+    
+    // 如果FPS为0（初始状态），显示"--"
+    if (current_fps == 0.0f) {
+        snprintf(info_text, sizeof(info_text), "FPS: --");
+    } else {
+        snprintf(info_text, sizeof(info_text), "FPS: %.1f", current_fps);
+    }
+    gfx_draw_string(buffer, 10, SCREEN_HEIGHT - 20, info_text, 1);
+    
+    // 右下角显示网格大小信息
+    snprintf(info_text, sizeof(info_text), "Grid: %dx%d", GRID_SIZE, GRID_SIZE);
+    int info_width = strlen(info_text) * 6; // 每字符6像素宽度
+    gfx_draw_string(buffer, SCREEN_WIDTH - info_width - 10, SCREEN_HEIGHT - 20, info_text, 1);
+    
+    // 在中下方显示控制信息
+    const char* controls = "Raspberry Pi Pico 3D Graphics Demo";
+    int controls_width = strlen(controls) * 6;
+    int controls_x = (SCREEN_WIDTH - controls_width) / 2;
+    gfx_draw_string(buffer, controls_x, SCREEN_HEIGHT - 40, controls, 1);
 }
 
 // 清理函数
