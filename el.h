@@ -53,7 +53,8 @@
 extern unsigned char framebuf_bp0[SCR_STRIDE * SCR_HEIGHT];
 extern unsigned char framebuf_bp1[SCR_STRIDE * SCR_HEIGHT];
 extern volatile int frame_scroll_lines;
-extern volatile bool frame_sync;
+extern volatile bool swap_buffer;
 
 void el_start();
 unsigned char *el_swap_buffer();
+unsigned char *el_get_draw_buffer();

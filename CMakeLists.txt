@@ -50,6 +50,7 @@ target_link_libraries(eldemo pico_stdlib hardware_dma m)
 # Add any user requested libraries
 target_link_libraries(eldemo
         hardware_pio
+        pico_multicore
         )
 
 pico_add_extra_outputs(eldemo)

@@ -155,11 +155,8 @@ void init_mesh() {
 }
 
 void draw_frame() {
-    // 清屏（假设你有 clearScreen() 或 fill 命令）
-    // 如果没有，用 drawLine 画黑线效率低，建议直接操作 buffer
-    // 此处假设你有 clearScreen() 函数，或自行实现
-    // clearScreen(); // 伪代码
-    unsigned char *buffer = el_swap_buffer();
+    // 获取当前的写缓冲区
+    unsigned char *buffer = el_get_draw_buffer();
     clear_screen(buffer);
     // 旋转后顶点缓存
     Vertex3D rotated_paraboloid[GRID_SIZE * GRID_SIZE];
@@ -225,7 +222,6 @@ void draw_frame() {
     
     angle_z += speed * 0.7f;
     if (angle_z > 2 * M_PI) angle_z -= 2 * M_PI;
-    el_swap_buffer();
 }
 
 // 清理函数

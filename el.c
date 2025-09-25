@@ -180,6 +180,10 @@ unsigned char *el_swap_buffer() {
     return frame_state ? framebuf_bp0 : framebuf_bp1;
 }
 
+unsigned char *el_get_draw_buffer() {
+    return frame_state ? framebuf_bp0 : framebuf_bp1;
+}
+
 /*void el_debug() {
     printf("PIO USM PC: %d, LSM PC: %d, IRQ: %d\n", el_pio->sm[EL_UDATA_SM].addr, el_pio->sm[EL_LDATA_SM].addr, el_pio->irq);
 }*/
