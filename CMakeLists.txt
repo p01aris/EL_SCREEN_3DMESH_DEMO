@@ -32,7 +32,8 @@ add_executable(eldemo)
 pico_generate_pio_header(eldemo ${CMAKE_CURRENT_LIST_DIR}/eldata.pio)
 
 target_sources(eldemo PRIVATE
-        main.c
+        #main.c
+        main_3d_demo.c
         el.c
         )
 
