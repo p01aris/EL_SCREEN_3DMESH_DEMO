@@ -4,7 +4,7 @@
 
 Some small demo that runs on a RP2040 (Raspberry Pi Pico family) platform and draws 3D mesh content on an EL display using the project's `el` display library.
 
-![3D Mesh Demo image](EL_Draw_grey/pic/image.png)
+![3D Mesh Demo image](EL_Draw_3d_demo/pic/image.png)
 ![4 Level grey Demo image](EL_Draw_grey/pic/image.png)
 
 ## Features
