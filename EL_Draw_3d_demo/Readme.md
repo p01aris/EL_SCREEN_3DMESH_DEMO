@@ -1,9 +1,10 @@
-# EL screen some demo
+# EL_Draw_3D_open
 
+![Demo image](pic/image.png)
 
+A small demo that runs on a RP2040 (Raspberry Pi Pico family) platform and draws 3D mesh content on an EL display using the project's `el` display library.
 
-Some small demo that runs on a RP2040 (Raspberry Pi Pico family) platform and draws 3D mesh content on an EL display using the project's `el` display library.
-
+This repository contains a 3D mesh demo (`main_3d_demo.c`) that demonstrates multicore drawing, a simple mesh renderer, and buffer swapping for an EL screen.
 
 ## Features
 
@@ -11,7 +12,6 @@ Some small demo that runs on a RP2040 (Raspberry Pi Pico family) platform and dr
 - Multicore rendering (core1 runs the renderer)
 - Mesh drawing demo (see `draw_mesh.h` / `draw_mesh.c`)
 - Simple memory/stack diagnostics and watchdog integration
-- 4 level grey test
 
 ## Hardware
 
@@ -56,6 +56,11 @@ If successful, a UF2 or binary will be available under `build/` (for example `el
 
 After flashing, reset or power-cycle the board. The demo will start automatically and use the EL display. The on-board LED is toggled during startup and the program prints debug messages to the standard USB serial output.
 
+## Important files
+
+- `main_3d_demo.c` — demo entry, multicore orchestration and main loop
+- `draw_mesh.h` / related files — mesh drawing implementation
+- `el.h` / `el.c` — EL display driver and helpers
 
 ## Notes
 
